@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: nginx.org/ingress-controller   
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-config
+  namespace: nginx-ingress
+data:
+  proxy-protocol: "True"
+  real-ip-header: "proxy_protocol"
+  http-snippet: |
+    map true $pass_access_scheme {
+      default "https";
+    }
+    map true $pass_port {
+      default 443;
+    }
+
+    server {
+      listen 8080 proxy_protocol;
+      return 308 https://$host$request_uri;
+    }
+  ssl-redirect: "False"
+  set-real-ip-from: "0.0.0.0/0"
+
